@@ -1,0 +1,81 @@
+version: '3'
+services:
+  ms25-lesson1:
+    hostname: ms25-lesson1
+    image: lesson1:v8
+    ports:
+      - "8811:8081"
+    networks:
+      - ms25
+    environment:
+      DB_HOST: db
+      DB_USERNAME: root
+      DB_PASSWORD: password
+      DB_PORT: 3306
+
+    depends_on:
+      - ms25-my
+
+  ms25-lesson2:
+    hostname: ms25-lesson2
+    image: lesson2:v3
+    ports:
+      - "8812:8081"
+    networks:
+      - ms25
+    environment:
+      DB_HOST: db
+      DB_USERNAME: root
+      DB_PASSWORD: password
+      DB_PORT: 3306
+
+    depends_on:
+      - ms25-my
+
+
+  ms25-my:
+    hostname: db
+    container_name: ms25-db
+    image: mysql:8.0.23
+    restart: always
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - 3306:3306
+    networks:
+      - ms25
+
+
+
+  adminer:
+    hostname: mysql
+    image: adminer
+    restart: always
+    ports:
+      - 8580:8080
+    networks:
+      - ms25
+
+  reverse_proxy:
+    image: nginx
+    hostname: proxy
+    container_name: reverse_proxy
+    ports:
+      - "8000:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - ms25-lesson1
+      - ms25-lesson2
+    networks:
+      - ms25
+
+volumes:
+  db_data:
+
+networks:
+  ms25:
